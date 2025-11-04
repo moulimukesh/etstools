@@ -169,6 +169,7 @@
                         <button onclick="scrollToSection('edi-formatter')" class="text-gray-600 hover:text-primary transition-colors">EDI Formatter</button>
                         <button onclick="scrollToSection('edi-comparator')" class="text-gray-600 hover:text-primary transition-colors">Comparator</button>
                         <button onclick="scrollToSection('idoc-utility')" class="text-gray-600 hover:text-primary transition-colors">IDOC Utility</button>
+                        <button onclick="scrollToSection('zinger-status')" class="text-gray-600 hover:text-primary transition-colors">Zinger Status</button>
                         <button onclick="scrollToSection('url-encoder')" class="text-gray-600 hover:text-primary transition-colors">URL Tools</button>
                         <button onclick="scrollToSection('team-contacts')" class="text-gray-600 hover:text-primary transition-colors">Contacts</button>
                     </nav>
@@ -319,6 +320,37 @@
                             Reprocess IDocs
                         </button>
                     </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Zinger Serial Status -->
+        <section id="zinger-status" class="mb-12 fade-in">
+            <div class="bg-white overflow-hidden transition-all duration-300">
+                <div class="px-6 py-4 gradient-emerald text-white">
+                    <h3 class="text-xl font-semibold flex items-center">
+                        <i data-lucide="activity" class="mr-3 w-5 h-5"></i>
+                        Get Zinger Serial Status
+                    </h3>
+                    <p class="text-emerald-100 mt-1">Check Zinger serial status for different environments</p>
+                </div>
+                <div class="p-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-gray-900">Get Zinger status for live env</h4>
+                            <button onclick="submitZingerStatus('live')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium btn-hover transition-all flex items-center justify-center">
+                                <i data-lucide="play-circle" class="mr-2 w-5 h-5"></i>
+                                Submit
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-gray-900">Get Zinger status for UAT env</h4>
+                            <button onclick="submitZingerStatus('uat')" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium btn-hover transition-all flex items-center justify-center">
+                                <i data-lucide="play-circle" class="mr-2 w-5 h-5"></i>
+                                Submit
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -649,6 +681,24 @@
             document.body.removeChild(form);
             
             showNotification('IDoc reprocess request has been submitted in a new window');
+        }
+
+        // Zinger Status functions
+        function submitZingerStatus(environment) {
+            const endpoint = environment === 'live'
+                ? 'http://localhost:5555/invoke/LocalDevPocMouli/getZingerSerialStatusLive'
+                : 'http://localhost:5555/invoke/LocalDevPocMouli/getZingerSerialStatusUAT';
+
+            const form = document.createElement('form');
+            form.method = 'GET';
+            form.action = endpoint;
+            form.target = '_blank';
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+
+            showNotification(`Zinger status check for ${environment.toUpperCase()} environment opened in a new window`);
         }
 
         // URL encoder/decoder functions
