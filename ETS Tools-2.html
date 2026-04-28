@@ -275,7 +275,8 @@
                     </button>
                     
                     <div id="comparisonResults" class="mt-6 hidden">
-                        <h4 class="text-lg font-semibold text-gray-900 mb-3">Differences Highlighted:</h4>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-2">Differences Highlighted:</h4>
+                        <p id="comparisonSummary" class="text-sm text-gray-600 mb-3"></p>
                         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                             <pre id="differences" class="text-sm font-mono whitespace-pre-wrap overflow-x-auto"></pre>
                         </div>
@@ -609,19 +610,26 @@
             // Simulate processing time
             await new Promise(resolve => setTimeout(resolve, 800));
 
-            const file1 = file1Content.split('\n');
-            const file2 = file2Content.split('\n');
+            const file1 = file1Content.split(/\r?\n/);
+            const file2 = file2Content.split(/\r?\n/);
+            const maxLines = Math.max(file1.length, file2.length);
             let highlightedText = '';
+            let changedLines = 0;
 
-            file1.forEach((line, index) => {
-                if (index < file2.length) {
-                    highlightedText += compareLine(line, file2[index]) + '\n';
-                } else {
-                    highlightedText += '<span class="highlight">' + escapeHTML(line) + '</span>\n';
+            for (let index = 0; index < maxLines; index++) {
+                const line1 = file1[index] ?? '';
+                const line2 = file2[index] ?? '';
+                const lineComparison = compareLine(line1, line2);
+
+                if (lineComparison.hasDiff) {
+                    changedLines += 1;
                 }
-            });
+
+                highlightedText += lineComparison.text + '\n';
+            }
 
             document.getElementById('differences').innerHTML = highlightedText;
+            document.getElementById('comparisonSummary').textContent = `${changedLines} differing line(s) out of ${maxLines} total line(s).`;
             document.getElementById('comparisonResults').classList.remove('hidden');
             
             btn.textContent = 'Compare Files';
@@ -632,6 +640,7 @@
 
         function compareLine(line1, line2) {
             let result = '';
+            let hasDiff = false;
             const maxLength = Math.max(line1.length, line2.length);
             for (let i = 0; i < maxLength; i++) {
                 const char1 = line1[i] || '';
@@ -639,10 +648,11 @@
                 if (char1 === char2) {
                     result += escapeHTML(char1);
                 } else {
+                    hasDiff = true;
                     result += '<span class="highlight">' + escapeHTML(char1) + '</span>';
                 }
             }
-            return result;
+            return { text: result, hasDiff };
         }
 
         function escapeHTML(text) {
