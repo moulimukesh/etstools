@@ -303,7 +303,7 @@
                                 <p class="text-sm text-blue-700 mt-1">
                                     If any IDoc status events get stuck in OLD or UPD status, this service can reprocess them by passing the IDoc number(s) as input.
                                 </p>
-                                <a href="https://chorus.apple.com/page/1966526" target="_blank" class="text-blue-600 text-sm underline hover:no-underline mt-2 inline-flex items-center">
+                                <a href="https://chorus.apple.com/page/1966526" target="_blank" rel="noopener noreferrer" class="text-blue-600 text-sm underline hover:no-underline mt-2 inline-flex items-center">
                                     View Documentation <i data-lucide="external-link" class="ml-1 w-3 h-3"></i>
                                 </a>
                             </div>
@@ -370,7 +370,7 @@
                     <p class="text-gray-600 mb-4">
                         View real-time analytics for auto alerts based on current shift timings.
                     </p>
-                    <a href="https://tableauanalytics.corp.apple.com/views/MouliSheet112sep2024/Dashboard1" target="_blank" class="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    <a href="https://tableauanalytics.corp.apple.com/views/MouliSheet112sep2024/Dashboard1" target="_blank" rel="noopener noreferrer" class="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                         <i data-lucide="external-link" class="mr-2 w-4 h-4"></i>
                         Open Dashboard
                     </a>
@@ -611,17 +611,23 @@
 
             const file1 = file1Content.split('\n');
             const file2 = file2Content.split('\n');
-            let highlightedText = '';
+            const maxLines = Math.max(file1.length, file2.length);
+            const highlightedLines = [];
 
-            file1.forEach((line, index) => {
-                if (index < file2.length) {
-                    highlightedText += compareLine(line, file2[index]) + '\n';
+            for (let index = 0; index < maxLines; index++) {
+                const line1 = file1[index];
+                const line2 = file2[index];
+
+                if (line1 === undefined) {
+                    highlightedLines.push('<span class="highlight">+ ' + escapeHTML(line2) + '</span>');
+                } else if (line2 === undefined) {
+                    highlightedLines.push('<span class="highlight">- ' + escapeHTML(line1) + '</span>');
                 } else {
-                    highlightedText += '<span class="highlight">' + escapeHTML(line) + '</span>\n';
+                    highlightedLines.push(compareLine(line1, line2));
                 }
-            });
+            }
 
-            document.getElementById('differences').innerHTML = highlightedText;
+            document.getElementById('differences').innerHTML = highlightedLines.join('\n');
             document.getElementById('comparisonResults').classList.remove('hidden');
             
             btn.textContent = 'Compare Files';
@@ -737,7 +743,7 @@
         }
 
         // Utility functions
-        function copyToClipboard(elementId) {
+        async function copyToClipboard(elementId) {
             const element = document.getElementById(elementId);
             const text = element.value;
             
@@ -746,11 +752,19 @@
                 return;
             }
 
-            navigator.clipboard.writeText(text).then(() => {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    element.focus();
+                    element.select();
+                    document.execCommand('copy');
+                    window.getSelection().removeAllRanges();
+                }
                 showNotification('Content copied to clipboard!');
-            }, (err) => {
+            } catch (err) {
                 showNotification('Failed to copy content', true);
-            });
+            }
         }
 
         function downloadFile(elementId, filename) {
